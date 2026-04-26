@@ -1,0 +1,11 @@
+name: smoking
+version: '${version}'
+main: iwtengu.smoking.Smoking
+api-version: '1.21.11'
+load: POSTWORLD
+
+description: ushi mne ne ebi
+
+commands:
+  givepack:
+    description: Выдаёт пачку сигарет
