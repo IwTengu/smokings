@@ -1,6 +1,6 @@
 package iwtengu.smoking.Items;
 
-import iwtengu.smoking.Listeners.CigarettePackListener;
+import iwtengu.smoking.Listeners.CigaretteListener;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -16,7 +16,7 @@ public class Cigarette {
 
     public static void register(JavaPlugin plugin) {
         plugin.getServer().getPluginManager().registerEvents(
-                new CigarettePackListener(),
+                new CigaretteListener(),
                 plugin
         );
     }
@@ -72,7 +72,7 @@ public class Cigarette {
         item.setItemMeta(meta);
     }
 
-    public static boolean isPack(ItemStack item) {
+    public static boolean isCigarette(ItemStack item) {
 
         if (item == null || item.getType() != Material.STICK) return false;
         if (!item.hasItemMeta()) return false;
