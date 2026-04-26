@@ -2,7 +2,7 @@ package iwtengu.smoking.Listeners;
 
 import iwtengu.smoking.Items.Cigarette;
 import iwtengu.smoking.Items.CigarettePack;
-import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -10,16 +10,15 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class CigarettePackListener implements Listener {
 
-    private final Map<UUID, Long> cooldowns = new HashMap<>();
-
     private static final long COOLDOWN_TIME = 1000;
+
+    private final NamespacedKey cooldownKey =
+            new NamespacedKey(JavaPlugin.getProvidingPlugin(getClass()), "pack_cd");
 
     @EventHandler
     public void onUse(PlayerInteractEvent event) {
@@ -33,21 +32,17 @@ public class CigarettePackListener implements Listener {
 
         ItemStack item = event.getItem();
 
-        if (!CigarettePack.isPack(item)) return;
-
-        if (item == null) return;
+        if (item == null || !CigarettePack.isPack(item)) return;
 
         Player player = event.getPlayer();
-        UUID uuid = player.getUniqueId();
 
         long now = System.currentTimeMillis();
 
-        if (cooldowns.containsKey(uuid)) {
-            long lastUse = cooldowns.get(uuid);
+        Long lastUse = player.getPersistentDataContainer()
+                .get(cooldownKey, PersistentDataType.LONG);
 
-            if ((now - lastUse) < COOLDOWN_TIME) {
-                return;
-            }
+        if (lastUse != null && (now - lastUse) < COOLDOWN_TIME) {
+            return;
         }
 
         int amount = CigarettePack.getAmount(item);
@@ -61,7 +56,11 @@ public class CigarettePackListener implements Listener {
                 Cigarette.get()
         );
 
-        cooldowns.put(uuid, now);
+        player.getPersistentDataContainer().set(
+                cooldownKey,
+                PersistentDataType.LONG,
+                now
+        );
 
         amount--;
 

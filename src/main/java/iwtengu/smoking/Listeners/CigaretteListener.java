@@ -4,6 +4,7 @@ import iwtengu.smoking.Items.Cigarette;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,15 +17,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public class CigaretteListener implements Listener {
 
     private static final long COOLDOWN_TIME = 5000;
 
-    private final Map<UUID, Long> cooldowns = new HashMap<>();
+    private final NamespacedKey cooldownKey =
+            new NamespacedKey(JavaPlugin.getProvidingPlugin(getClass()), "cigarette_cd");
 
     @EventHandler
     public void onSmoke(PlayerInteractEvent event) {
@@ -41,13 +41,14 @@ public class CigaretteListener implements Listener {
         if (!Cigarette.isCigarette(item)) return;
 
         Player player = event.getPlayer();
-        UUID uuid = player.getUniqueId();
 
         long now = System.currentTimeMillis();
 
-        if (cooldowns.containsKey(uuid)) {
-            long lastUse = cooldowns.get(uuid);
-            if ((now - lastUse) < COOLDOWN_TIME) return;
+        Long lastUse = player.getPersistentDataContainer()
+                .get(cooldownKey, org.bukkit.persistence.PersistentDataType.LONG);
+
+        if (lastUse != null && (now - lastUse) < COOLDOWN_TIME) {
+            return;
         }
 
         int puffs = Cigarette.getAmount(item);
@@ -67,7 +68,11 @@ public class CigaretteListener implements Listener {
             Cigarette.setAmount(item, puffs);
         }
 
-        cooldowns.put(uuid, now);
+        player.getPersistentDataContainer().set(
+                cooldownKey,
+                org.bukkit.persistence.PersistentDataType.LONG,
+                now
+        );
 
         showActionBar(player, puffs);
     }
