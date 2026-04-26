@@ -1,10 +1,10 @@
 package iwtengu.smoking.Listeners;
 
 import iwtengu.smoking.Items.Cigarette;
+import iwtengu.smoking.Utils.CooldownUtil;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,26 +13,18 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
-
-import java.util.UUID;
 
 public class CigaretteListener implements Listener {
 
     private static final long COOLDOWN_TIME = 5000;
 
-    private final NamespacedKey cooldownKey =
-            new NamespacedKey(JavaPlugin.getProvidingPlugin(getClass()), "cigarette_cd");
-
     @EventHandler
     public void onSmoke(PlayerInteractEvent event) {
 
-        Action action = event.getAction();
-
-        if (action != Action.RIGHT_CLICK_AIR &&
-                action != Action.RIGHT_CLICK_BLOCK) return;
+        if (event.getAction() != Action.RIGHT_CLICK_AIR &&
+                event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
         if (event.getHand() != EquipmentSlot.HAND) return;
 
@@ -42,12 +34,7 @@ public class CigaretteListener implements Listener {
 
         Player player = event.getPlayer();
 
-        long now = System.currentTimeMillis();
-
-        Long lastUse = player.getPersistentDataContainer()
-                .get(cooldownKey, org.bukkit.persistence.PersistentDataType.LONG);
-
-        if (lastUse != null && (now - lastUse) < COOLDOWN_TIME) {
+        if (CooldownUtil.isOnCooldown(player, "cd_smoke", COOLDOWN_TIME)) {
             return;
         }
 
@@ -68,11 +55,7 @@ public class CigaretteListener implements Listener {
             Cigarette.setAmount(item, puffs);
         }
 
-        player.getPersistentDataContainer().set(
-                cooldownKey,
-                org.bukkit.persistence.PersistentDataType.LONG,
-                now
-        );
+        CooldownUtil.setCooldown(player, "cd_smoke");
 
         showActionBar(player, puffs);
     }
@@ -104,7 +87,7 @@ public class CigaretteListener implements Listener {
                 ticks += 2;
             }
         }.runTaskTimer(
-                JavaPlugin.getProvidingPlugin(getClass()),
+                org.bukkit.plugin.java.JavaPlugin.getProvidingPlugin(getClass()),
                 0L,
                 2L
         );

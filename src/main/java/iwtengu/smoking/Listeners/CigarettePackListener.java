@@ -2,7 +2,7 @@ package iwtengu.smoking.Listeners;
 
 import iwtengu.smoking.Items.Cigarette;
 import iwtengu.smoking.Items.CigarettePack;
-import org.bukkit.NamespacedKey;
+import iwtengu.smoking.Utils.CooldownUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -10,15 +10,10 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.java.JavaPlugin;
 
 public class CigarettePackListener implements Listener {
 
     private static final long COOLDOWN_TIME = 1000;
-
-    private final NamespacedKey cooldownKey =
-            new NamespacedKey(JavaPlugin.getProvidingPlugin(getClass()), "pack_cd");
 
     @EventHandler
     public void onUse(PlayerInteractEvent event) {
@@ -36,12 +31,7 @@ public class CigarettePackListener implements Listener {
 
         Player player = event.getPlayer();
 
-        long now = System.currentTimeMillis();
-
-        Long lastUse = player.getPersistentDataContainer()
-                .get(cooldownKey, PersistentDataType.LONG);
-
-        if (lastUse != null && (now - lastUse) < COOLDOWN_TIME) {
+        if (CooldownUtil.isOnCooldown(player, "cd_pack", COOLDOWN_TIME)) {
             return;
         }
 
@@ -52,15 +42,9 @@ public class CigarettePackListener implements Listener {
             return;
         }
 
-        player.getInventory().addItem(
-                Cigarette.get()
-        );
+        player.getInventory().addItem(Cigarette.get());
 
-        player.getPersistentDataContainer().set(
-                cooldownKey,
-                PersistentDataType.LONG,
-                now
-        );
+        CooldownUtil.setCooldown(player, "cd_pack");
 
         amount--;
 
