@@ -13,6 +13,6 @@ public final class Smoking extends JavaPlugin {
 
     @Override
     public void onDisable() {
-
+//uuyoyoiouio
     }
 }
